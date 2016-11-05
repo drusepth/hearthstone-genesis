@@ -4,25 +4,25 @@ import re
 
 class MinionAbility:
 	templates = [
-		{'value': 0, 'text': '<ability>.' },
-		# {'value': 0, 'text': 'Battlecry: <effect>.'},
-		# {'value': 0, 'text': 'Battlecry: <effect>, then <effect>.'},
-		# {'value': 0, 'text': 'Deathrattle: <effect>.'},
-		# {'value': -1, 'text': 'Inspire: <effect>.'},
-		# {'value': 0, 'text': 'At the end of your turn, gain <ability>.'},
-		# {'value': 0, 'text': 'Battlecry: <targetable_effect>.'},
-		# {'value': 1, 'text': 'Battlecry: Gain <ability> until end of turn.'},
-		# {'value': 0, 'text': 'Combo: <effect>.'},
-		# {'value': 0, 'text': 'Combo: <targetable_effect>.'},
-		# {'value': 0, 'text': 'Combo: Gain <stackable_effect> for every card in your hand.'},
+		{'value': 0.00, 'text': '<ability>.' },
+		{'value': 0.50, 'text': 'Battlecry: <effect>.'},
+		{'value': 1.00, 'text': 'Battlecry: <effect>, then <effect>.'},
+		{'value': 0.50, 'text': 'Deathrattle: <effect>.'},
+		{'value': 1.00, 'text': 'Inspire: <effect>.'},
+		{'value': 1.00, 'text': 'At the end of your turn, gain <ability>.'},
+		{'value': 0.50, 'text': 'Battlecry: <targetable_effect>.'},
+		{'value': 0.50, 'text': 'Battlecry: Gain <ability> until end of turn.'},
+		{'value': 0.50, 'text': 'Combo: <effect>.'},
+		{'value': 0.50, 'text': 'Combo: <targetable_effect>.'},
+		{'value': 2.50, 'text': 'Combo: Gain <stackable_effect> for every card in your hand.'},
 	]
 
 	effects = [
 		{'value': 1.84, 'text': 'Draw a card'},
 		{'value': -1.25, 'text': 'Discard a card'},
-		{'value': 0, 'text': 'Draw <V+(2-4)> cards'},
+		{'value': 1.00, 'text': 'Draw <V+(2-4)> cards'},
 		{'value': -1.98, 'text': 'Your opponent draws a card'},
-		{'value': -0.27, 'text': 'Deal <i+(1-10)> damage to your hero'},
+		{'value': -0.27, 'text': 'Deal <q+(1-10)> damage to your hero'},
 	]
 
 	targetable_effects = [
@@ -36,7 +36,7 @@ class MinionAbility:
 
 	stackable_effects = [
 		{'value': 0.57, 'text': '+<v+(0-2)> Attack'},
-		{'value': 0.40, 'text': '+<v+(0-2) Health'},
+		{'value': 0.40, 'text': '+<v+(0-2)> Health'},
 		{'value': 0.46, 'text': 'Spell Power +1'},
 	]
 
@@ -84,7 +84,7 @@ class MinionAbility:
 
 		# Replace variable rolls
 		while True:
-			match = re.search('\<(\w*)\+*\((\d)\-(\d)\)\>', ability.get('text'))
+			match = re.search('\<(\w*)\+*\((\d+)\-(\d+)\)\>', ability.get('text'))
 			if not match:
 				break
 
@@ -100,11 +100,13 @@ class MinionAbility:
 				ability['value'] = ability['value'] + 2 * roll
 			elif 'i' in flags: # decrease value by the roll amount
 				ability['value'] = ability['value'] - roll
+			elif 'q' in flags: # decrease value by 0.25 * roll around
+				ability['value'] = ability['value'] - 0.25 * roll
 			elif 'm' in flags: # multiply ability times roll
 				ability['value'] = ability['value'] * roll
 
 			# Do the text substitution
-			ability['text'] = re.sub('\<(\w*)\+*\((\d)\-(\d)\)\>', str(roll), ability.get('text'), count=1)
+			ability['text'] = re.sub('\<(\w*)\+*\((\d+)\-(\d+)\)\>', str(roll), ability.get('text'), count=1)
 
 		print("Built ability: %s" % ability)
 
