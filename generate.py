@@ -6,29 +6,44 @@ class MinionAbility:
 	templates = [
 		{'value': 0.00, 'text': '<ability>.' },
 		{'value': 0.20, 'text': 'Battlecry: <effect>.'},
+		{'value': 0.20, 'text': 'Battlecry: <targetable_effect>.'},
+		{'value': 0.20, 'text': 'Battlecry: If <condition>, <targetable_effect>.'},
+		{'value': 0.30, 'text': 'Battlecry: If <condition>, <targetable_effect> and <effect>.'},
+		{'value': 0.50, 'text': 'Battlecry: Gain <stackable_effect> for every spell in your hand.'},
+		{'value': 0.50, 'text': 'Battlecry: Gain <stackable_effect> for every minion in your hand.'},
 		{'value': 0.20, 'text': 'Deathrattle: <effect>.'},
 		{'value': 0.50, 'text': 'Inspire: <effect>.'},
-		{'value': 0.50, 'text': 'At the beginning of your turn, <targetable_effect>.'},
+		{'value': 0.50, 'text': 'At the beginning of your turn, <effect>.'},
 		{'value': 0.50, 'text': 'At the end of your turn, gain <ability>.'},
 		{'value': 0.50, 'text': 'At the end of each turn, <effect>.'},
-		{'value': 0.20, 'text': 'Battlecry: <targetable_effect>.'},
-		{'value': 0.20, 'text': 'Battlecry: Gain <ability> until end of turn.'},
 		{'value': 0.20, 'text': 'Combo: <effect>.'},
 		{'value': 0.20, 'text': 'Combo: <targetable_effect>.'},
-		{'value': 0.50, 'text': 'Combo: Gain <stackable_effect> for every card in your hand.'},
-		{'value': 0.50, 'text': 'Battlecry: Gain <stackable_effect> for every spell in your hand.'},
-		{'value': 0.10, 'text': 'Battlecry: Gain <stackable_effect> for every <minion_type> in your hand.'},
+		{'value': 0.70, 'text': 'Your <minion_type>s are <minion_type>s.'},
+		{'value': 0.70, 'text': 'Your <minion_type>s gain <stackable_effect>.'},
+		{'value': 0.70, 'text': 'Your <minion_type>s gain <ability>.'},
+
 	]
 
 	effects = [
 		{'value': 1.84, 'text': 'Draw a card'},
-		{'value': -1.25, 'text': 'Discard a card'},
 		{'value': 1.00, 'text': 'Draw <V+(2-4)> cards'},
+		{'value': -1.25, 'text': 'Discard a card'},
 		{'value': -1.98, 'text': 'Your opponent draws a card'},
 		{'value': -0.27, 'text': 'Deal <q+(1-10)> damage to your hero'},
 		{'value': 0.75, 'text': 'Equip a random weapon'},
 		{'value': 1.31, 'text': 'Your other minions gain <stackable_effect>'},
 		{'value': 1.31, 'text': 'Your <minion_type>s gain <stackable_effect>'},
+		{'value': 0.31, 'text': 'Gain <stackable_effect> for every <minion_type> in your hand'},
+		{'value': 0.31, 'text': 'Give a random friendly minion <ability>'},
+		{'value': 0.31, 'text': 'Gain <ability> until end of turn'},
+
+	]
+
+	conditions = [
+		{'value': -5.0, 'text': 'your deck has no more than 1 of any card' },
+		{'value': -0.40, 'text': 'your deck has at least <i+(2-20)> <minion_type>s'},
+		{'value': -0.40, 'text': 'your deck has no more than <i+(2-20)> <minion_type>s'},
+		{'value': 0.00, 'text': 'you have at least <i+(2-8)> cards in hand'}
 	]
 
 	targetable_effects = [
@@ -45,9 +60,9 @@ class MinionAbility:
 	]
 
 	stackable_effects = [
-		{'value': 0.57, 'text': '+<v+(0-2)> Attack'},
-		{'value': 0.40, 'text': '+<v+(0-2)> Health'},
-		{'value': 1.10, 'text': '+<v+(0-2)>/+<v+(0-2)>'},
+		{'value': 0.57, 'text': '+<v+(1-5)> Attack'},
+		{'value': 0.40, 'text': '+<v+(1-5)> Health'},
+		{'value': 1.10, 'text': '+<v+(1-5)>/+<v+(1-5)>'},
 		{'value': 0.46, 'text': 'Spell Power +1'},
 	]
 
@@ -62,7 +77,7 @@ class MinionAbility:
 	]
 
 	minion_types = [
-		'beast', 'dragon', 'murloc', 'demon'
+		'beast', 'dragon', 'murloc', 'demon', 'mech'
 	]
 
 	def __init__(self, text="", value=0):
@@ -76,11 +91,6 @@ class MinionAbility:
 
 		ability = copy.copy(random.choice(MinionAbility.templates))
 		#print("Chose template %s" % ability)
-
-		while '<ability>' in ability.get('text'):
-			random_ability   = random.choice(MinionAbility.abilities)
-			ability['text']  = ability['text'].replace('<ability>', random_ability.get('text'), 1)
-			ability['value'] = ability['value'] + random_ability.get('value')
 
 		while '<effect>' in ability.get('text'):
 			random_effect    = random.choice(MinionAbility.effects)
@@ -96,6 +106,16 @@ class MinionAbility:
 			random_effect    = random.choice(MinionAbility.stackable_effects)
 			ability['text']  = ability['text'].replace('<stackable_effect>', random_effect.get('text'), 1)
 			ability['value'] = ability['value'] + random_effect.get('value')
+
+		while '<condition>' in ability.get('text'):
+			condition        = random.choice(MinionAbility.conditions)
+			ability['text']  = ability['text'].replace('<condition>', condition.get('text'), 1)
+			ability['value'] = ability['value'] + condition.get('value')
+
+		while '<ability>' in ability.get('text'):
+			random_ability   = random.choice(MinionAbility.abilities)
+			ability['text']  = ability['text'].replace('<ability>', random_ability.get('text'), 1)
+			ability['value'] = ability['value'] + random_ability.get('value')
 
 		# Replace variable rolls
 		while True:
@@ -134,8 +154,7 @@ class MinionAbility:
 
 class Card:
 	def __init__(self):
-		#print("Card init")
-		pass
+		self.name = "Unnamed card"
 
 	def generate_abilities(self):
 		raise Exception("must implement generate_abilities in Card subclass")
@@ -147,7 +166,7 @@ class Card:
 
 	def __str__(self):
 		return "%s (%s), %s/%s %s %s: %s" % (
-			"Unnamed Card",
+			self.name,
 			self.cost,
 			self.attack,
 			self.health,
@@ -158,7 +177,7 @@ class Card:
 
 	def to_csv(self):
 		return "%s;%s;%s;%s;%s;%s;%s" % (
-			"Unnamed Card",
+			self.name,
 			self.cost,
 			self.attack,
 			self.health,
@@ -171,13 +190,33 @@ class MinionCard(Card):
 	value_per_attack_point = 0.57
 	value_per_health_point = 0.40
 
+	name_prefaces = [
+		'Holy', 'Dark', 'Merchant', 'Lively'
+	]
+
+	names = [
+		'Knight', 'Soldier', 'Adventurer', 'Commander'
+	]
+
+	name_suffixes = [
+		'of Dragons', 'of the Moon', 'of love'
+	]
+
 	def __init__(self):
 		#print("Minion init")
 		self.card_type = 'minion'
 		self.hero = 'neutral'
+		self.generate_name()
 		self.generate_abilities()
 		self.generate_stats()
 		self.sanity_check_edges()
+
+	def generate_name(self):
+		self.name = ' '.join([
+			random.choice(MinionCard.name_prefaces),
+			random.choice(MinionCard.names),
+			random.choice(MinionCard.name_suffixes)
+		])
 
 	def generate_abilities(self):
 		#print('Generating minion abilities')
