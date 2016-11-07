@@ -13,12 +13,15 @@ class MinionAbility:
 		{'value': 1.50, 'text': 'Battlecry: Gain <stackable_effect> for every minion in your hand.'},
 		{'value': 0.20, 'text': 'Deathrattle: <effect>.'},
 		{'value': 0.50, 'text': 'Inspire: <effect>.'},
+		{'value': 0.50, 'text': 'Inspire: Gain <stackable_effect>.'},
+		{'value': 0.50, 'text': 'Inspire: Gain "<ability_aura>".'},
 		{'value': 0.50, 'text': 'At the beginning of your turn, <effect>.'},
 		{'value': 0.50, 'text': 'At the end of your turn, gain <ability>.'},
 		{'value': 0.50, 'text': 'At the end of each turn, <effect>.'},
 		{'value': 0.20, 'text': 'Combo: <effect>.'},
 		{'value': 0.20, 'text': 'Combo: <targetable_effect>.'},
 		{'value': 0.20, 'text': 'Enrage: <ability_aura>.'},
+		{'value': 0.20, 'text': 'Has <ability> while <condition>.'},
 		{'value': 0.30, 'text': 'Your <minion_type>s are <minion_type>s.'},
 		{'value': 0.30, 'text': 'Your <minion_type>s gain <stackable_effect>.'},
 		{'value': 0.30, 'text': 'Your <minion_type>s gain <ability>.'},
@@ -82,6 +85,9 @@ class MinionAbility:
 		{'value': 2.33, 'text': 'Put a <minion_type> from your hand into play'},
 		{'value': 1.33, 'text': 'Give all <minion_type>s in your hand and deck <stackable_effect>'},
 		{'value': -5.0, 'text': 'Destroy a random friendly minion'},
+		{'value': 4.20, 'text': 'Destroy all <minion_type>s'},
+		{'value': 0.20, 'text': 'Shuffle this minion into your deck'},
+		{'value': -0.70, 'text': "Shuffle this minion into your opponent's deck"},
 	]
 
 	targetable_effects = [
@@ -94,6 +100,7 @@ class MinionAbility:
 		{'value': 0.42, 'text': 'Freeze a <minion_type>'},
 		{'value': 0.83, 'text': 'Silence a minion'},
 		{'value': 0.13, 'text': 'Silence a <minion_type>'},
+		{'value': 0.13, 'text': 'Return a <minion_type> to your hand'},
 		{'value': 1.05, 'text': 'Discover a <minion_type>'},
 		{'value': 0.35, 'text': 'Discover a weapon'},
 		{'value': 0.35, 'text': 'Discover a spell'},
@@ -134,6 +141,7 @@ class MinionAbility:
 		{'value': 0.33, 'text': 'Your Hero Power costs (<V+(1-2)>) less.'},
 		{'value': -0.53, 'text': "Your opponent's Hero Power costs (<V+(1-2)>) less."},
 		{'value': 0.53, 'text': "Your weapon has +<v+(1-3)> Attack."},
+		{'value': 0.33, 'text': "Can't be targeted by spells or Hero Powers"},
 	]
 
 	minion_types = [
@@ -336,7 +344,7 @@ class MinionCard(Card):
 
 
 print('Name;Cost;Attack;Health;Class;Type;Effect')
-for x in range(1, 100):
+for x in range(1, 10000):
 	#print("Generating card %s" % x)
 
 	card = MinionCard()
