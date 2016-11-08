@@ -412,5 +412,10 @@ class SpellCard(Card):
 
 print('Name;Cost;Attack;Health;Class;Type;Effect')
 for x in range(1, 5):
-	card = SpellCard()
+
+	if random.randint(0, 1) == 0:
+		card = SpellCard()
+	else:
+		card = MinionCard()
+
 	print card.to_csv()
