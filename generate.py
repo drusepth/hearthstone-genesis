@@ -4,8 +4,6 @@ import re
 
 class Ability:
 	templates = [
-		{'value': 0.20, 'text': 'Combo: <effect>.'},
-		{'value': 0.20, 'text': 'Combo: <targetable_effect>.'},
 		{'value': -1.30, 'text': 'Choose One - <targetable_effect>; or <targetable_effect>.'},
 		{'value': -1.30, 'text': 'Choose One - <effect>; or <effect>.'},
 	]
@@ -84,6 +82,13 @@ class Ability:
 		{'value': 0.33, 'text': 'Your Hero Power costs (<V+(1-2)>) less.'},
 		{'value': -0.53, 'text': "Your opponent's Hero Power costs (<V+(1-2)>) less."},
 		{'value': 0.53, 'text': "Your weapon has +<v+(1-3)> Attack."},
+	]
+
+	stackable_effects = [
+		{'value': 0.57, 'text': '+<v+(1-5)> Attack'},
+		{'value': 0.40, 'text': '+<v+(1-5)> Health'},
+		{'value': 1.10, 'text': '+<v+(1-5)>/+<v+(1-5)>'},
+		{'value': 0.46, 'text': 'Spell Power +1'},
 	]
 
 	minion_types = [
@@ -203,6 +208,8 @@ class MinionAbility(Ability):
 		{'value': -1.30, 'text': 'Whenever this minion loses <ability>, <effect>.'},
 		{'value': -1.30, 'text': 'Whenever this minion gains <ability>, <effect>.'},
 		{'value': 1.30, 'text': 'Adjacent minions have <stackable_effect>.'},
+		{'value': 0.20, 'text': 'Combo: <effect>.'},
+		{'value': 0.20, 'text': 'Combo: <targetable_effect>.'},
 	]
 
 	effects = Ability.effects + [
@@ -238,11 +245,9 @@ class MinionAbility(Ability):
 		{'value': 0.33, 'text': "Can't be targeted by spells or Hero Powers"},
 	]
 
-	stackable_effects = [
-		{'value': 0.57, 'text': '+<v+(1-5)> Attack'},
-		{'value': 0.40, 'text': '+<v+(1-5)> Health'},
-		{'value': 1.10, 'text': '+<v+(1-5)>/+<v+(1-5)>'},
-		{'value': 0.46, 'text': 'Spell Power +1'},
+class SpellAbility(Ability):
+	templates = [
+		{'value': 0.00, 'text': '<effect>.'}
 	]
 
 class Card:
@@ -251,9 +256,6 @@ class Card:
 		self.cost = 0
 		self.hero = 'neutral'
 		self.card_type = 'UNKNOWN'
-
-	def generate_abilities(self):
-		raise Exception("must implement generate_abilities in Card subclass")
 
 	def ability_value(self):
 		sum([ability.value for ability in self.abilities])
@@ -269,7 +271,7 @@ class Card:
 		)
 
 	def to_csv(self):
-		return "%s;%s;%s;%s;%s;%s;%s" % (
+		return "%s;%s;%s;%s;%s" % (
 			self.name,
 			self.cost,
 			self.hero,
@@ -311,9 +313,11 @@ class MinionCard(Card):
 	def __init__(self):
 		self.card_type = 'minion'
 		self.hero = 'neutral'
+
 		self.name = self.random_name()
 		self.abilities = self.random_abilities()
 		self.cost, self.attack, self.health = self.generate_stats()
+
 		self.sanity_check_edges()
 
 	def random_name(self):
@@ -380,7 +384,33 @@ class MinionCard(Card):
 			' '.join([ability.text for ability in self.abilities])
 		)
 
+class SpellCard(Card):
+	def __init__(self):
+		self.card_type = 'spell'
+		self.hero = 'neutral'
+
+		self.name = 'Unnamed spell'
+		self.abilities = self.random_abilities()
+		self.cost = int(self.ability_value())
+
+		self.sanity_check_edges()
+
+	def random_abilities(self):
+		abilities = []
+
+		number_of_abilities = 1 #random.randint(1, 2)
+		for a in range(0, number_of_abilities):
+			abilities.append(SpellAbility.random())
+
+		return abilities
+
+	def sanity_check_edges(self):
+		if self.cost < 0:
+			self.cost = 0
+		elif self.cost > 10:
+			self.cost = 10
+
 print('Name;Cost;Attack;Health;Class;Type;Effect')
 for x in range(1, 5):
-	card = MinionCard()
+	card = SpellCard()
 	print card.to_csv()
