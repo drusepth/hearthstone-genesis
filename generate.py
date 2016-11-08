@@ -2,50 +2,18 @@ import random #random.choice
 import copy #copy.copy
 import re
 
-class MinionAbility:
+class Ability:
 	templates = [
-		{'value': 0.00, 'text': '<ability>.' },
-		{'value': 0.20, 'text': 'Battlecry: <effect>.'},
-		{'value': 0.20, 'text': 'Battlecry: <targetable_effect>.'},
-		{'value': 0.20, 'text': 'Battlecry: If <condition>, <targetable_effect>.'},
-		{'value': 0.30, 'text': 'Battlecry: If <condition>, <targetable_effect> and <effect>.'},
-		{'value': 1.50, 'text': 'Battlecry: Gain <stackable_effect> for every spell in your hand.'},
-		{'value': 1.50, 'text': 'Battlecry: Gain <stackable_effect> for every minion in your hand.'},
-		{'value': 0.20, 'text': 'Deathrattle: <effect>.'},
-		{'value': 0.50, 'text': 'Inspire: <effect>.'},
-		{'value': 0.50, 'text': 'Inspire: Gain <stackable_effect>.'},
-		{'value': 0.50, 'text': 'Inspire: Gain "<ability_aura>".'},
-		{'value': 0.50, 'text': 'At the beginning of your turn, <effect>.'},
-		{'value': 0.50, 'text': 'At the end of your turn, gain <ability>.'},
-		{'value': 0.50, 'text': 'At the end of each turn, <effect>.'},
 		{'value': 0.20, 'text': 'Combo: <effect>.'},
 		{'value': 0.20, 'text': 'Combo: <targetable_effect>.'},
-		{'value': 0.20, 'text': 'Enrage: <ability_aura>.'},
-		{'value': 0.20, 'text': 'Has <ability> while <condition>.'},
-		{'value': 0.30, 'text': 'Your <minion_type>s are <minion_type>s.'},
-		{'value': 0.30, 'text': 'Your <minion_type>s gain <stackable_effect>.'},
-		{'value': 0.30, 'text': 'Your <minion_type>s gain <ability>.'},
 		{'value': -1.30, 'text': 'Choose One - <targetable_effect>; or <targetable_effect>.'},
 		{'value': -1.30, 'text': 'Choose One - <effect>; or <effect>.'},
-		{'value': -1.30, 'text': 'Choose One - Gain <ability>; or Gain <ability>.'},
-		{'value': -1.30, 'text': 'Choose One - <ability_aura>; or <ability_aura>.'},
-		{'value': 0.30, 'text': 'Whenever this minion attacks, <effect>.'},
-		{'value': 0.30, 'text': 'After this attacks and kills a minion, <effect>.'},
-		{'value': 0.30, 'text': 'Whenever this minion takes damage, <effect>.'},
-		{'value': 0.30, 'text': 'Whenever you cast a spell, <effect>.'},
-		{'value': 0.30, 'text': 'Whenever a <minion_type> dies, <effect>.'},
-		{'value': 0.30, 'text': 'Whenever you discard a card, <effect>.'},
-		{'value': 0.30, 'text': 'Whenever your hero is attacked, <effect>.'},
-		{'value': 0.30, 'text': 'Whenever you gain Armor, <effect>.'},
-		{'value': -1.30, 'text': 'Whenever this minion loses <ability>, <effect>.'},
-		{'value': -1.30, 'text': 'Whenever this minion gains <ability>, <effect>.'},
-		{'value': 1.30, 'text': 'Adjacent minions have <stackable_effect>.'},
 	]
 
 	conditions = [
 		{'value': -5.0, 'text': 'your deck has no more than 1 of any card' },
-		{'value': -0.40, 'text': 'your deck has at least <i+(2-20)> <minion_type>s'},
-		{'value': -0.40, 'text': 'your deck has no more than <i+(2-20)> <minion_type>s'},
+		{'value': 1.40, 'text': 'your deck has at least <(2-20)> <minion_type>s'},
+		{'value': 1.40, 'text': 'your deck has no more than <i+(2-20)> <minion_type>s'},
 		{'value': 0.00, 'text': 'you have at least <i+(2-8)> cards in hand'},
 		{'value': 0.00, 'text': 'your hand is empty'},
 		{'value': 0.00, 'text': 'you control no minions'},
@@ -60,34 +28,25 @@ class MinionAbility:
 		{'value': -1.25, 'text': 'Discard a card'},
 		{'value': -1.98, 'text': 'Your opponent draws a card'},
 		{'value': -0.27, 'text': 'Deal <q+(1-10)> damage to your hero'},
-		{'value': -0.27, 'text': 'Deal <q+(1-10)> damage a random allied character'},
-		{'value': -0.27, 'text': 'Deal <q+(1-10)> damage to HIMSELF'},
-		{'value': 0.27, 'text': 'Deal <q+(1-10)> damage a random enemy'},
+		{'value': -0.27, 'text': 'Deal <q+(1-10)> damage to a random allied character'},
+		{'value': 0.27, 'text': 'Deal <q+(1-10)> damage to a random enemy'},
 		{'value': -1.27, 'text': 'Destroy a Mana Crystal'},
 		{'value': 0.75, 'text': 'Equip a random weapon'},
 		{'value': 0.15, 'text': 'Add a random weapon to your hand'},
-		{'value': 1.31, 'text': 'Your other minions gain <stackable_effect>'},
 		{'value': 1.31, 'text': 'Your <minion_type>s gain <stackable_effect>'},
-		{'value': 1.31, 'text': 'Your other minions gain "<ability_aura>"'},
 		{'value': 1.31, 'text': 'Your <minion_type>s gain "<ability_aura>"'},
-		{'value': 0.31, 'text': 'Gain <stackable_effect> for every <minion_type> in your hand'},
 		{'value': 0.31, 'text': 'Give a random friendly minion <ability>'},
 		{'value': 0.31, 'text': 'Give a random friendly minion "<ability_aura>"'},
 		{'value': 0.31, 'text': 'Give a random friendly minion <stackable_effect>'},
-		{'value': 0.31, 'text': 'Gain <ability> until end of turn'},
-		{'value': 0.31, 'text': 'Gain <stackable_effect> for each damaged minion on the battlefield'},
+		{'value': 2.33, 'text': 'Put a <minion_type> from your hand into play'},
 		{'value': 0.42, 'text': 'Summon a random <v+(0-10)>-Cost minion'},
 		{'value': 0.42, 'text': 'Restore <v+(1-10)> Health to a random character'},
 		{'value': 0.22, 'text': 'Gain <v+(1-10)> Armor'},
 		{'value': 0.33, 'text': 'The next <minion_type> you play costs Health instead of mana'},
 		{'value': 0.33, 'text': 'Summon a random <minion_type>'},
-		{'value': 0.33, 'text': 'Return this minion to your hand'},
-		{'value': 2.33, 'text': 'Put a <minion_type> from your hand into play'},
 		{'value': 1.33, 'text': 'Give all <minion_type>s in your hand and deck <stackable_effect>'},
 		{'value': -5.0, 'text': 'Destroy a random friendly minion'},
 		{'value': 4.20, 'text': 'Destroy all <minion_type>s'},
-		{'value': 0.20, 'text': 'Shuffle this minion into your deck'},
-		{'value': -0.70, 'text': "Shuffle this minion into your opponent's deck"},
 	]
 
 	targetable_effects = [
@@ -110,28 +69,12 @@ class MinionAbility:
 		{'value': 0.92, 'text': 'Take control of a minion with <v+(1-10)> or less Attack'},
 	]
 
-	stackable_effects = [
-		{'value': 0.57, 'text': '+<v+(1-5)> Attack'},
-		{'value': 0.40, 'text': '+<v+(1-5)> Health'},
-		{'value': 1.10, 'text': '+<v+(1-5)>/+<v+(1-5)>'},
-		{'value': 0.46, 'text': 'Spell Power +1'},
-	]
-
 	abilities = [
-		{'value': 0.51, 'text': 'Taunt'},
-		{'value': 1.40, 'text': 'Divine Shield'},
-		{'value': 1.19, 'text': 'Windfury'},
-		{'value': 5.40, 'text': 'Mega-Windfury'},
-		{'value': 0.46, 'text': 'Spell Power +<v+(1-3)>'},
-		{'value': 0.33, 'text': 'Charge'},
-		{'value': 0.61, 'text': 'Stealth'},
 		{'value': -0.83, 'text': 'Overload (<i+(1-3)>)'},
-		{'value': -0.83, 'text': "Can't attack"},
 	]
 
 	ability_auras = [
 		{'value': 3.40, 'text': 'Your Hero is Immune'},
-		{'value': -0.53, 'text': "50% chance to attack the wrong target"},
 		{'value': 0.36, 'text': 'Your spells cost (<v+(1-3)>) less.'},
 		{'value': 0.26, 'text': 'Your minions cost (<v+(1-3)>) less.'},
 		{'value': 0.06, 'text': 'Your weapons cost (<v+(1-3)>) less.'},
@@ -141,7 +84,82 @@ class MinionAbility:
 		{'value': 0.33, 'text': 'Your Hero Power costs (<V+(1-2)>) less.'},
 		{'value': -0.53, 'text': "Your opponent's Hero Power costs (<V+(1-2)>) less."},
 		{'value': 0.53, 'text': "Your weapon has +<v+(1-3)> Attack."},
+	]
+
+class MinionAbility(Ability):
+	templates = Ability.templates + [
+		{'value': 0.00, 'text': '<ability>.' },
+		{'value': 0.20, 'text': 'Battlecry: <effect>.'},
+		{'value': 0.20, 'text': 'Battlecry: <targetable_effect>.'},
+		{'value': 0.20, 'text': 'Battlecry: If <condition>, <targetable_effect>.'},
+		{'value': 0.30, 'text': 'Battlecry: If <condition>, <targetable_effect> and <effect>.'},
+		{'value': 1.50, 'text': 'Battlecry: Gain <stackable_effect> for every spell in your hand.'},
+		{'value': 1.50, 'text': 'Battlecry: Gain <stackable_effect> for every minion in your hand.'},
+		{'value': 0.20, 'text': 'Deathrattle: <effect>.'},
+		{'value': 0.50, 'text': 'Inspire: <effect>.'},
+		{'value': 0.50, 'text': 'Inspire: Gain <stackable_effect>.'},
+		{'value': 0.50, 'text': 'Inspire: Gain "<ability_aura>".'},
+		{'value': 0.50, 'text': 'At the beginning of your turn, <effect>.'},
+		{'value': 0.50, 'text': 'At the end of your turn, gain <ability>.'},
+		{'value': 0.50, 'text': 'At the end of each turn, <effect>.'},
+		{'value': 0.20, 'text': 'Enrage: <ability_aura>.'},
+		{'value': 0.20, 'text': 'Has <ability> while <condition>.'},
+		{'value': 0.30, 'text': 'Your <minion_type>s are <minion_type>s.'},
+		{'value': 0.30, 'text': 'Your <minion_type>s gain <stackable_effect>.'},
+		{'value': 0.30, 'text': 'Your <minion_type>s gain <ability>.'},
+		{'value': -1.30, 'text': 'Choose One - Gain <ability>; or Gain <ability>.'},
+		{'value': -1.30, 'text': 'Choose One - <ability_aura>; or <ability_aura>.'},
+		{'value': 0.30, 'text': 'Whenever this minion attacks, <effect>.'},
+		{'value': 0.30, 'text': 'After this attacks and kills a minion, <effect>.'},
+		{'value': 0.30, 'text': 'Whenever this minion takes damage, <effect>.'},
+		{'value': 0.30, 'text': 'Whenever you cast a spell, <effect>.'},
+		{'value': 0.30, 'text': 'Whenever a <minion_type> dies, <effect>.'},
+		{'value': 0.30, 'text': 'Whenever you discard a card, <effect>.'},
+		{'value': 0.30, 'text': 'Whenever your hero is attacked, <effect>.'},
+		{'value': 0.30, 'text': 'Whenever you gain Armor, <effect>.'},
+		{'value': -1.30, 'text': 'Whenever this minion loses <ability>, <effect>.'},
+		{'value': -1.30, 'text': 'Whenever this minion gains <ability>, <effect>.'},
+		{'value': 1.30, 'text': 'Adjacent minions have <stackable_effect>.'},
+	]
+
+	effects = Ability.effects + [
+		{'value': -0.27, 'text': 'Deal <q+(1-10)> damage to HIMSELF'},
+		{'value': 1.31, 'text': 'Your other minions gain <stackable_effect>'},
+		{'value': 1.31, 'text': 'Your other minions gain "<ability_aura>"'},
+		{'value': 0.31, 'text': 'Gain <stackable_effect> for every <minion_type> in your hand'},
+		{'value': 0.31, 'text': 'Gain <ability> until end of turn'},
+		{'value': 0.31, 'text': 'Gain <stackable_effect> for each damaged minion on the battlefield'},
+		{'value': 0.33, 'text': 'Return this minion to your hand'},
+		{'value': 0.20, 'text': 'Shuffle this minion into your deck'},
+		{'value': -0.70, 'text': "Shuffle this minion into your opponent's deck"},
+	]
+
+	targetable_effects = Ability.targetable_effects + [
+		{'value': 1.42, 'text': "Deal damage equal to this minion's Attack"},
+		{'value': 1.42, 'text': "Deal damage equal to this minion's Health"},
+	]
+
+	abilities = Ability.abilities + [
+		{'value': 0.51, 'text': 'Taunt'},
+		{'value': 1.40, 'text': 'Divine Shield'},
+		{'value': 1.19, 'text': 'Windfury'},
+		{'value': 5.40, 'text': 'Mega-Windfury'},
+		{'value': 0.46, 'text': 'Spell Power +<v+(1-3)>'},
+		{'value': 0.33, 'text': 'Charge'},
+		{'value': 0.61, 'text': 'Stealth'},
+		{'value': -0.83, 'text': "Can't attack"},
+	]
+
+	ability_auras = Ability.ability_auras + [
+		{'value': -0.53, 'text': "50% chance to attack the wrong target"},
 		{'value': 0.33, 'text': "Can't be targeted by spells or Hero Powers"},
+	]
+
+	stackable_effects = [
+		{'value': 0.57, 'text': '+<v+(1-5)> Attack'},
+		{'value': 0.40, 'text': '+<v+(1-5)> Health'},
+		{'value': 1.10, 'text': '+<v+(1-5)>/+<v+(1-5)>'},
+		{'value': 0.46, 'text': 'Spell Power +1'},
 	]
 
 	minion_types = [
@@ -344,7 +362,7 @@ class MinionCard(Card):
 
 
 print('Name;Cost;Attack;Health;Class;Type;Effect')
-for x in range(1, 10000):
+for x in range(1, 5):
 	#print("Generating card %s" % x)
 
 	card = MinionCard()
