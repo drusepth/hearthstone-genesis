@@ -86,6 +86,89 @@ class Ability:
 		{'value': 0.53, 'text': "Your weapon has +<v+(1-3)> Attack."},
 	]
 
+	minion_types = [
+		'Beast', 'Dragon', 'Murloc', 'Demon', 'Mech', 'Pirate', 'Totem'
+	]
+
+	card_types = [
+		'minion', 'spell', 'weapon'
+	]
+
+	def __init__(self, text="", value=0):
+		self.text = text
+		self.value = value
+
+	@classmethod
+	def replace_tokens(ability_subclass, ability):
+		while '<effect>' in ability.get('text'):
+			random_effect    = random.choice(ability_subclass.effects)
+			ability['text']  = ability['text'].replace('<effect>', random_effect.get('text'), 1)
+			ability['value'] = ability['value'] + random_effect.get('value')
+
+		while '<targetable_effect>' in ability.get('text'):
+			random_effect    = random.choice(ability_subclass.targetable_effects)
+			ability['text']  = ability['text'].replace('<targetable_effect>', random_effect.get('text'), 1)
+			ability['value'] = ability['value'] + random_effect.get('value')
+
+		while '<stackable_effect>' in ability.get('text'):
+			random_effect    = random.choice(ability_subclass.stackable_effects)
+			ability['text']  = ability['text'].replace('<stackable_effect>', random_effect.get('text'), 1)
+			ability['value'] = ability['value'] + random_effect.get('value')
+
+		while '<condition>' in ability.get('text'):
+			condition        = random.choice(ability_subclass.conditions)
+			ability['text']  = ability['text'].replace('<condition>', condition.get('text'), 1)
+			ability['value'] = ability['value'] + condition.get('value')
+
+		while '<ability>' in ability.get('text'):
+			random_ability   = random.choice(ability_subclass.abilities)
+			ability['text']  = ability['text'].replace('<ability>', random_ability.get('text'), 1)
+			ability['value'] = ability['value'] + random_ability.get('value')
+
+		while '<ability_aura>' in ability.get('text'):
+			random_ability   = random.choice(ability_subclass.ability_auras)
+			ability['text']  = ability['text'].replace('<ability_aura>', random_ability.get('text'), 1)
+			ability['value'] = ability['value'] + random_ability.get('value')
+
+		while '<minion_type>' in ability.get('text'):
+			random_type      = random.choice(ability_subclass.minion_types)
+			ability['text']  = ability['text'].replace('<minion_type>', random_type, 1)
+
+		return ability
+
+	@classmethod
+	def roll_variables(ability_subclass, ability):
+		while True:
+			match = re.search('\<(\w*)\+*\((\d+)\-(\d+)\)\>', ability.get('text'))
+			if not match:
+				return ability
+
+			flags, lower_bound, upper_bound = match.group(1), match.group(2), match.group(3)
+			roll = random.randint(int(lower_bound), int(upper_bound))
+
+			if False: pass     # Flags defined below:
+			elif 'v' in flags: # increase value by the roll amount
+				ability['value'] = ability['value'] + roll
+			elif 'V' in flags: # increase value by 2 times the roll amount
+				ability['value'] = ability['value'] + 2 * roll
+			elif 'i' in flags: # decrease value by the roll amount
+				ability['value'] = ability['value'] - roll
+			elif 'q' in flags: # decrease value by 0.25 * roll around
+				ability['value'] = ability['value'] - 0.25 * roll
+			elif 'm' in flags: # multiply ability times roll
+				ability['value'] = ability['value'] * roll
+
+			# Do the text substitution
+			ability['text'] = re.sub('\<(\w*)\+*\((\d+)\-(\d+)\)\>', str(roll), ability.get('text'), count=1)
+
+	@classmethod
+	def random(ability_subclass):
+		ability = copy.copy(random.choice(ability_subclass.templates))
+		ability = ability_subclass.replace_tokens(ability)
+		ability = ability_subclass.roll_variables(ability)
+
+		return ability_subclass(text=ability.get('text'), value=ability.get('value'))
+
 class MinionAbility(Ability):
 	templates = Ability.templates + [
 		{'value': 0.00, 'text': '<ability>.' },
@@ -162,105 +245,24 @@ class MinionAbility(Ability):
 		{'value': 0.46, 'text': 'Spell Power +1'},
 	]
 
-	minion_types = [
-		'Beast', 'Dragon', 'Murloc', 'Demon', 'Mech', 'Pirate', 'Totem'
-	]
-
-	def __init__(self, text="", value=0):
-		#print("MinionAbility init with text=%s & value=%s" % (text, value))
-		self.text = text
-		self.value = value
-
-	@staticmethod
-	def random():
-		#print("Generating random minion ability")
-
-		ability = copy.copy(random.choice(MinionAbility.templates))
-		#print("Chose template %s" % ability)
-
-		while '<effect>' in ability.get('text'):
-			random_effect    = random.choice(MinionAbility.effects)
-			ability['text']  = ability['text'].replace('<effect>', random_effect.get('text'), 1)
-			ability['value'] = ability['value'] + random_effect.get('value')
-
-		while '<targetable_effect>' in ability.get('text'):
-			random_effect    = random.choice(MinionAbility.targetable_effects)
-			ability['text']  = ability['text'].replace('<targetable_effect>', random_effect.get('text'), 1)
-			ability['value'] = ability['value'] + random_effect.get('value')
-
-		while '<stackable_effect>' in ability.get('text'):
-			random_effect    = random.choice(MinionAbility.stackable_effects)
-			ability['text']  = ability['text'].replace('<stackable_effect>', random_effect.get('text'), 1)
-			ability['value'] = ability['value'] + random_effect.get('value')
-
-		while '<condition>' in ability.get('text'):
-			condition        = random.choice(MinionAbility.conditions)
-			ability['text']  = ability['text'].replace('<condition>', condition.get('text'), 1)
-			ability['value'] = ability['value'] + condition.get('value')
-
-		while '<ability>' in ability.get('text'):
-			random_ability   = random.choice(MinionAbility.abilities)
-			ability['text']  = ability['text'].replace('<ability>', random_ability.get('text'), 1)
-			ability['value'] = ability['value'] + random_ability.get('value')
-
-		while '<ability_aura>' in ability.get('text'):
-			random_ability   = random.choice(MinionAbility.ability_auras)
-			ability['text']  = ability['text'].replace('<ability_aura>', random_ability.get('text'), 1)
-			ability['value'] = ability['value'] + random_ability.get('value')
-
-		# Replace variable rolls
-		while True:
-			match = re.search('\<(\w*)\+*\((\d+)\-(\d+)\)\>', ability.get('text'))
-			if not match:
-				break
-
-			flags, lower_bound, upper_bound = match.group(1), match.group(2), match.group(3)
-
-			roll = random.randint(int(lower_bound), int(upper_bound))
-			#print("Rolled %s for %s in %s" % (roll, match.group(0), ability.get('text')))
-
-			if False: pass     # Flags defined below:
-			elif 'v' in flags: # increase value by the roll amount
-				ability['value'] = ability['value'] + roll
-			elif 'V' in flags: # increase value by 2 times the roll amount
-				ability['value'] = ability['value'] + 2 * roll
-			elif 'i' in flags: # decrease value by the roll amount
-				ability['value'] = ability['value'] - roll
-			elif 'q' in flags: # decrease value by 0.25 * roll around
-				ability['value'] = ability['value'] - 0.25 * roll
-			elif 'm' in flags: # multiply ability times roll
-				ability['value'] = ability['value'] * roll
-
-			# Do the text substitution
-			ability['text'] = re.sub('\<(\w*)\+*\((\d+)\-(\d+)\)\>', str(roll), ability.get('text'), count=1)
-
-		# Replace minion types
-		while '<minion_type>' in ability.get('text'):
-			random_type      = random.choice(MinionAbility.minion_types)
-			ability['text']  = ability['text'].replace('<minion_type>', random_type, 1)
-
-		#print("Built ability: %s" % ability)
-
-		return MinionAbility(text=ability.get('text'), value=ability.get('value'))
-
 class Card:
 	def __init__(self):
 		self.name = "Unnamed card"
+		self.cost = 0
+		self.hero = 'neutral'
+		self.card_type = 'UNKNOWN'
 
 	def generate_abilities(self):
 		raise Exception("must implement generate_abilities in Card subclass")
 
 	def ability_value(self):
-		#print("Calculating cost")
-		total_cost = sum([ability.value for ability in self.abilities])
-		return total_cost
+		sum([ability.value for ability in self.abilities])
+		return sum([ability.value for ability in self.abilities])
 
 	def __str__(self):
-		return "%s (%s), %s/%s %s %s: %s" % (
+		return "%s (%s) %s %s: %s" % (
 			self.name,
 			self.cost,
-			self.attack,
-			self.health,
 			self.hero,
 			self.card_type,
 			' '.join([ability.text for ability in self.abilities])
@@ -270,8 +272,6 @@ class Card:
 		return "%s;%s;%s;%s;%s;%s;%s" % (
 			self.name,
 			self.cost,
-			self.attack,
-			self.health,
 			self.hero,
 			self.card_type,
 			' '.join([ability.text for ability in self.abilities])
@@ -309,47 +309,45 @@ class MinionCard(Card):
 	]
 
 	def __init__(self):
-		#print("Minion init")
 		self.card_type = 'minion'
 		self.hero = 'neutral'
-		self.generate_name()
-		self.generate_abilities()
-		self.generate_stats()
+		self.name = self.random_name()
+		self.abilities = self.random_abilities()
+		self.cost, self.attack, self.health = self.generate_stats()
 		self.sanity_check_edges()
 
-	def generate_name(self):
-		self.name = ' '.join([
+	def random_name(self):
+		return ' '.join([
 			random.choice(MinionCard.name_prefaces),
 			random.choice(MinionCard.names)
 		])
 
-	def generate_abilities(self):
-		#print('Generating minion abilities')
-		self.abilities = []
+	def random_abilities(self):
+		abilities = []
 
 		number_of_abilities = 1 #random.randint(1, 2)
 		for a in range(0, number_of_abilities):
-			self.abilities.append(MinionAbility.random())
+			abilities.append(MinionAbility.random())
+
+		return abilities
 
 	def generate_stats(self):
-		#print('Generating minion stats')
-
 		ability_value = self.ability_value()
-		#print("Beginning with %s ability value" % ability_value)
 
-		if ability_value >= 10:
+		if ability_value > 10 or ability_value < 0:
 			extra_value = random.uniform(0, 5)
 		else:
 			extra_value = random.uniform(0, 10 - ability_value)
-		#print("Adding %s extra value in stats" % extra_value)
 
 		attack_value_distribution = random.uniform(0.01, extra_value)
-		self.attack = int(attack_value_distribution / MinionCard.value_per_attack_point)
+		attack = int(attack_value_distribution / MinionCard.value_per_attack_point)
 
 		health_value_distribution = extra_value - attack_value_distribution
-		self.health = int(health_value_distribution / MinionCard.value_per_health_point)
+		health = int(health_value_distribution / MinionCard.value_per_health_point)
 
-		self.cost = int(ability_value + extra_value)
+		cost = int(ability_value + extra_value)
+
+		return cost, attack, health
 
 	def sanity_check_edges(self):
 		if self.cost < 0:
@@ -360,10 +358,29 @@ class MinionCard(Card):
 		if self.health < 1:
 			self.health = 1
 
+	def __str__(self):
+		return "%s (%s), %s/%s %s %s: %s" % (
+			self.name,
+			self.cost,
+			self.attack,
+			self.health,
+			self.hero,
+			self.card_type,
+			' '.join([ability.text for ability in self.abilities])
+		)
+
+	def to_csv(self):
+		return "%s;%s;%s;%s;%s;%s;%s" % (
+			self.name,
+			self.cost,
+			self.attack,
+			self.health,
+			self.hero,
+			self.card_type,
+			' '.join([ability.text for ability in self.abilities])
+		)
 
 print('Name;Cost;Attack;Health;Class;Type;Effect')
 for x in range(1, 5):
-	#print("Generating card %s" % x)
-
 	card = MinionCard()
 	print card.to_csv()
