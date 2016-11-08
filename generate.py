@@ -7,6 +7,7 @@ class Ability:
 		{'value': -0.30, 'text': 'Choose One - <targetable_effect>; or <targetable_effect>.'},
 		{'value': -0.30, 'text': 'Choose One - <effect>; or <effect>.'},
 		{'value': -0.30, 'text': 'When you draw this card, <effect>.'},
+		{'value': -0.30, 'text': 'When this card is discarded, <effect>.'},
 	]
 
 	conditions = [
@@ -19,6 +20,33 @@ class Ability:
 		{'value': 0.00, 'text': 'your opponent has at least <i+(1-6)> minions'},
 		{'value': 0.00, 'text': 'you control a Secret'},
 		{'value': -0.50, 'text': 'your opponent controls a Secret'},
+	]
+
+	triggers = [
+		{'value': 2.00, 'text': 'you receive fatal damage'},
+		{'value': 0.20, 'text': 'you draw a card'},
+		{'value': 0.20, 'text': 'you discard a card'},
+		{'value': 0.20, 'text': 'your opponent draws a card'},
+		{'value': 0.20, 'text': 'your hero is attacked'},
+		{'value': 0.20, 'text': 'a friendly minion is attacked'},
+		{'value': 0.20, 'text': 'your opponent casts a spell'},
+		{'value': 0.20, 'text': 'a spell is cast'},
+		{'value': 0.20, 'text': 'a spell is cast targeting a minion'},
+		{'value': 0.20, 'text': 'an enemy minion is summoned'},
+		{'value': 0.20, 'text': 'a <minion_type> is summoned'},
+		{'value': -1.4, 'text': 'a minion with <ability> is summoned'},
+		{'value': -2.0, 'text': 'a <minion_type> with <ability> is summoned'},
+		{'value': 0.20, 'text': 'a <card_type> is played'},
+		{'value': 0.20, 'text': 'your opponent uses their Hero Power'},
+		{'value': 0.20, 'text': 'a <minion_type> dies'},
+		{'value': 0.20, 'text': 'a weapon is equipped'},
+		{'value': 0.20, 'text': 'a weapon is broken'},
+		{'value': 0.20, 'text': 'a weapon loses durability'},
+		{'value': 0.20, 'text': 'you gain Armor'},
+		{'value': 0.20, 'text': 'a minion takes damage'},
+		{'value': 0.20, 'text': 'a minion is healed'},
+		{'value': 0.20, 'text': 'a Hero is healed'},
+		{'value': 0.20, 'text': 'more than <i+(1-10)> Health is restored in a turn'},
 	]
 
 	effects = [
@@ -50,7 +78,7 @@ class Ability:
 
 	targetable_effects = [
 		{'value': 0.82, 'text': 'Deal <v+(0-8)> damage to a minion'},
-		{'value': 0.82, 'text': 'Deal <v+(1-6)> damage to an enemy'},
+		{'value': 0.82, 'text': 'Deal <v+(1-6)> damage to an enemy character'},
 		{'value': 1.84, 'text': 'Deal <V+(0-8)> damage to all enemy minions'},
 		{'value': 5.33, 'text': 'Destroy a minion'},
 		{'value': 2.73, 'text': 'Destroy a <minion_type>'},
@@ -140,6 +168,25 @@ class Ability:
 			random_type      = random.choice(ability_subclass.minion_types)
 			ability['text']  = ability['text'].replace('<minion_type>', random_type, 1)
 
+		while '<trigger>' in ability.get('text'):
+			random_trigger   = random.choice(ability_subclass.triggers)
+			ability['text']  = ability['text'].replace('<trigger>', random_trigger.get('text'), 1)
+
+		while '<card_type>' in ability.get('text'):
+			random_type      = random.choice(ability_subclass.card_types)
+			ability['text']  = ability['text'].replace('<card_type>', random_type, 1)
+
+		#TODO: clean all this up so ordering doesn't matter
+
+		while '<ability>' in ability.get('text'):
+			random_ability   = random.choice(ability_subclass.abilities)
+			ability['text']  = ability['text'].replace('<ability>', random_ability.get('text'), 1)
+			ability['value'] = ability['value'] + random_ability.get('value')
+
+		while '<minion_type>' in ability.get('text'):
+			random_type      = random.choice(ability_subclass.minion_types)
+			ability['text']  = ability['text'].replace('<minion_type>', random_type, 1)
+
 		return ability
 
 	@classmethod
@@ -201,11 +248,7 @@ class MinionAbility(Ability):
 		{'value': 0.30, 'text': 'Whenever this minion attacks, <effect>.'},
 		{'value': 0.30, 'text': 'After this attacks and kills a minion, <effect>.'},
 		{'value': 0.30, 'text': 'Whenever this minion takes damage, <effect>.'},
-		{'value': 0.30, 'text': 'Whenever you cast a spell, <effect>.'},
-		{'value': 0.30, 'text': 'Whenever a <minion_type> dies, <effect>.'},
-		{'value': 0.30, 'text': 'Whenever you discard a card, <effect>.'},
-		{'value': 0.30, 'text': 'Whenever your hero is attacked, <effect>.'},
-		{'value': 0.30, 'text': 'Whenever you gain Armor, <effect>.'},
+		{'value': 0.30, 'text': 'Whenever <trigger>, <effect>.'},
 		{'value': -1.30, 'text': 'Whenever this minion loses <ability>, <effect>.'},
 		{'value': -1.30, 'text': 'Whenever this minion gains <ability>, <effect>.'},
 		{'value': 1.30, 'text': 'Adjacent minions have <stackable_effect>.'},
@@ -224,6 +267,7 @@ class MinionAbility(Ability):
 		{'value': 0.33, 'text': 'Return this minion to your hand'},
 		{'value': 0.20, 'text': 'Shuffle this minion into your deck'},
 		{'value': -0.70, 'text': "Shuffle this minion into your opponent's deck"},
+		{'value': -1.27, 'text': 'Destroy <i+(2-5)> of your Mana Crystals'},
 	]
 
 	targetable_effects = Ability.targetable_effects + [
@@ -249,6 +293,7 @@ class MinionAbility(Ability):
 
 class SpellAbility(Ability):
 	templates = [
+		{'value': 0.00, 'text': 'Secret: When <trigger>, <effect>.'},
 		{'value': 0.00, 'text': '<effect>.'},
 		{'value': 0.00, 'text': '<targetable_effect>.'},
 		{'value': 2.00, 'text': 'Give your minions <ability> until end of turn.'},
@@ -271,10 +316,7 @@ class SpellAbility(Ability):
 		{'value': 0.00, 'text': 'Give your <ability> minions <ability>.'},
 		{'value': 0.50, 'text': 'At the beginning of your next turn, <effect>.'},
 		{'value': 0.50, 'text': 'At the end of your turn, <effect>.'},
-		{'value': 0.30, 'text': 'Whenever a minion takes damage this turn, <effect>.'},
-		{'value': 0.30, 'text': 'Whenever you cast a spell this turn, <effect>.'},
-		{'value': 0.30, 'text': 'Whenever a <minion_type> dies this turn, <effect>.'},
-		{'value': 0.30, 'text': 'Whenever you discard a card this turn, <effect>.'},
+		{'value': 0.30, 'text': 'Whenever <trigger> this turn, <effect>.'},
 		{'value': 0.20, 'text': 'Combo: <effect>.'},
 		{'value': 0.20, 'text': 'Combo: <targetable_effect>.'},
 		{'value': 1.00, 'text': 'Costs (<v+(1-4)>) less for each <minion_type> you control.'},
@@ -368,8 +410,10 @@ class MinionCard(Card):
 	def generate_stats(self):
 		ability_value = self.ability_value()
 
-		if ability_value > 10 or ability_value < 0:
+		if ability_value > 10:
 			extra_value = random.uniform(0, 5)
+		elif ability_value < 0:
+			extra_value = random.uniform(-ability_value, 10)
 		else:
 			extra_value = random.uniform(0, 10 - ability_value)
 
@@ -444,10 +488,10 @@ class SpellCard(Card):
 			self.cost = 10
 
 print('Name;Cost;Attack;Health;Class;Type;Effect')
-for x in range(1, 5):
+for x in range(1, 100):
 
 	if random.randint(0, 1) == 0:
-		card = SpellCard()
+		card = MinionCard()
 	else:
 		card = SpellCard()
 
