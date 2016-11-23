@@ -67,6 +67,9 @@ class Ability:
 		{'value': 0.31, 'text': 'Give a random friendly minion <ability>'},
 		{'value': 0.31, 'text': 'Give a random friendly minion "<ability_aura>"'},
 		{'value': 0.31, 'text': 'Give a random friendly minion <stackable_effect>'},
+		{'value': 0.31, 'text': 'Give a random friendly minion in your hand <ability>'},
+		{'value': 0.31, 'text': 'Give a random friendly minion in your hand "<ability_aura>"'},
+		{'value': 0.31, 'text': 'Give a random friendly minion in your hand <stackable_effect>'},
 		{'value': 2.33, 'text': 'Put a <minion_type> from your hand into play'},
 		{'value': 0.42, 'text': 'Summon a random <v+(0-10)>-Cost minion'},
 		{'value': 0.42, 'text': 'Restore <v+(1-10)> Health to a random character'},
@@ -152,14 +155,14 @@ class Ability:
 			'ability':           ability_subclass.abilities,
 			'ability_aura':      ability_subclass.ability_auras,
 			'minion_type':       ability_subclass.minion_types,
-			'triggers':          ability_subclass.triggers,
+			'trigger':           ability_subclass.triggers,
 			'card_type':         ability_subclass.card_types
 		}
 
 		while len(ability.get('text')) < Ability.MAXIMUM_TEXT_LENGTH:
 			made_replacement = False
 			for token, replacement_pool in token_pools.iteritems():
-				if token in ability.get('text'):
+				if ("<%s>" % token) in ability.get('text'):
 					token_replacement = random.choice(replacement_pool)
 					ability['text']  = ability['text'].replace("<%s>" % token, token_replacement.get('text'), 1)
 					ability['value'] = ability['value'] + token_replacement.get('value')
@@ -270,6 +273,7 @@ class MinionAbility(Ability):
 	ability_auras = Ability.ability_auras + [
 		{'value': -0.53, 'text': "50% chance to attack the wrong target"},
 		{'value': 0.33, 'text': "Can't be targeted by spells or Hero Powers"},
+		{'value': 0.13, 'text': "Can't be targeted by spells"},
 	]
 
 class SpellAbility(Ability):
@@ -281,9 +285,9 @@ class SpellAbility(Ability):
 		{'value': 2.00, 'text': 'Give your minions "<ability_aura>" until end of turn.'},
 		{'value': 2.00, 'text': 'Give your minions <stackable_effect> until end of turn.'},
 		{'value': 2.00, 'text': 'Give your minions <stackable_effect>.'},
-		{'value': 0.00, 'text': 'Give a random minion in your hand <ability>.'},
+		{'value': 0.50, 'text': 'Give a random minion in your hand <ability>.'},
 		{'value': 0.00, 'text': 'Give a random minion in your hand "<ability_aura>".'},
-		{'value': 0.00, 'text': 'Give a random minion in your hand <stackable_effect>.'},
+		{'value': -1.0, 'text': 'Give a random minion in your hand <stackable_effect>.'},
 		{'value': -3.00, 'text': 'Give a random minion in your deck <ability>.'},
 		{'value': -3.00, 'text': 'Give a random minion in your deck "<ability_aura>".'},
 		{'value': -3.00, 'text': 'Give a random minion in your deck <stackable_effect>.'},
@@ -303,39 +307,27 @@ class SpellAbility(Ability):
 		{'value': 1.00, 'text': 'Costs (<v+(1-4)>) less for each <minion_type> you control.'},
 	]
 
-class Card:
-	def __init__(self):
-		self.name = "Unnamed card"
-		self.cost = 0
-		self.hero = 'neutral'
-		self.card_type = 'UNKNOWN'
+class WeaponAbility(Ability):
+	templates = [
+		{'value': 0.00, 'text': 'Battlecry: <effect>.'},
+		{'value': 0.00, 'text': 'Battlecry: <targetable_effect>.'},
+		{'value': 0.00, 'text': 'Combo: <effect>.'},
+		{'value': 0.00, 'text': 'Combo: <targetable_effect>.'},
+		{'value': 0.00, 'text': 'Deathrattle: <effect>.'},
+		{'value': 0.00, 'text': 'Inspire: <effect>.'},
+		{'value': -1.0, 'text': 'Inspire: <effect> and lose 1 Durability.'},
+		{'value': -1.0, 'text': 'Inspire: <ability_aura> until end of turn.'},
+		{'value': 0.00, 'text': '<ability_aura>.'},
+		{'value': 2.00, 'text': 'Whenever your hero attacks, <effect>.'},
+		{'value': 2.00, 'text': 'Whenever this weapon damages a minion, <effect>.'},
+		{'value': 2.00, 'text': 'Whenever <trigger>, <effect>.'},
+		{'value': 2.00, 'text': 'At the beginning of your turn, <effect>.'},
+		{'value': 1.00, 'text': 'At the beginning of your turn, <effect> and lose 1 Durability.'},
+		{'value': 2.00, 'text': 'At the end of your turn, <effect>.'},
+		{'value': 1.00, 'text': 'At the end of your turn, <effect> and lose 1 Durability.'}
+	]
 
-	def ability_value(self):
-		sum([ability.value for ability in self.abilities])
-		return sum([ability.value for ability in self.abilities])
-
-	def __str__(self):
-		return "%s (%s) %s %s: %s" % (
-			self.name,
-			self.cost,
-			self.hero,
-			self.card_type,
-			' '.join([ability.text for ability in self.abilities])
-		)
-
-	def to_csv(self):
-		return "%s;%s;%s;%s;%s" % (
-			self.name,
-			self.cost,
-			self.hero,
-			self.card_type,
-			' '.join([ability.text for ability in self.abilities])
-		)
-
-class MinionCard(Card):
-	value_per_attack_point = 0.57
-	value_per_health_point = 0.40
-
+class Card(object):
 	name_prefaces = [
 		'Holy', 'Dark', 'Merchant', 'Lively', 'Blood', 'Furious', 'Death', 'Critical', 'High',
 		'Fel', 'Time', 'Goblin', 'Elven', 'Shady', 'Deaf', 'Deadly', 'Arcane', 'Experienced',
@@ -345,7 +337,7 @@ class MinionCard(Card):
 		'Stealthy', 'Kabal', 'Babbling', 'Bubbling', 'Dragon', 'Armored', 'Jade', 'Diamond', 'Onyx',
 		'Smoking', 'Coughing', 'Worthless', 'Awful', 'Bad', 'Wise', 'Tortured', 'Light',
 		'Solemn', 'Divine', 'Zephyr', 'Electric', 'Amateur', 'Greedy', 'Humble', 'Skeletal',
-		'Ancient', "Death's", 'Inspiring'
+		'Ancient', "Death's", 'Inspiring', 'Shadow of'
 	]
 
 	names = [
@@ -363,9 +355,66 @@ class MinionCard(Card):
 		'Abomination', 'Wall'
 	]
 
+	actions = [
+		'Fusion', 'Summoning', 'Summon', 'Sacrifice', 'Pact', 'Light', 'Well', 'Knife', 'Partnership',
+		'Fell', 'Fall', 'Star', 'Doom', 'Control', 'Horror', 'Blessings', 'Corruption', 'Hex', 'Bind',
+		'Counter', 'Fit', 'Check', 'Sight', 'Call', 'Calling', "of C'thun", 'Calls', 'Hands', 'Gate',
+		'Nether', 'World', 'Region', 'Defense', 'Defenses', 'Offense', 'Weapon', 'Sun', 'Moon', 'Moonlight',
+		'Roar', 'Growl', 'Twist', 'Bolt', 'Shot', 'Trap', 'Cast', 'Spell', 'Book', 'Scroll', 'Portal'
+	]
+
 	def __init__(self):
-		self.card_type = 'minion'
+		self.name = "Unnamed card"
+		self.cost = 0
+		self.card_type = 'UNKNOWN'
 		self.hero = 'neutral'
+		self.attack = ''
+		self.health = ''
+		self.durability = ''
+
+	def ability_value(self):
+		sum([ability.value for ability in self.abilities])
+		return sum([ability.value for ability in self.abilities])
+
+	def sanity_check_edges(self):
+		if self.cost < 0:
+			self.cost = 0
+		elif self.cost > 10:
+			self.cost = 10
+
+	def __str__(self):
+		return "%s (%s), %s/%s%s %s %s: %s" % (
+			self.name,
+			self.cost,
+			self.attack,
+			self.health,
+			self.durability,
+			self.hero,
+			self.card_type,
+			' '.join([ability.text for ability in self.abilities])
+		)
+
+	def to_csv(self):
+		return "%s;%s;%s;%s;%s;%s;%s;%s" % (
+			self.name,
+			self.cost,
+			self.attack,
+			self.health,
+			self.durability,
+			self.hero,
+			self.card_type,
+			' '.join([ability.text for ability in self.abilities])
+		)
+
+class MinionCard(Card):
+	value_per_attack_point = 0.57
+	value_per_health_point = 0.40
+
+	def __init__(self):
+		super(MinionCard, self).__init__()
+
+		self.card_type = 'minion'
+		self.hero = random.choice(['neutral', 'hunter', 'paladin', 'priest', 'warrior', 'warlock', 'shaman', 'mage', 'druid', 'rogue'])
 
 		self.name = self.random_name()
 		self.abilities = self.random_abilities()
@@ -375,8 +424,8 @@ class MinionCard(Card):
 
 	def random_name(self):
 		return ' '.join([
-			random.choice(MinionCard.name_prefaces),
-			random.choice(MinionCard.names)
+			random.choice(Card.name_prefaces),
+			random.choice(Card.names)
 		])
 
 	def random_abilities(self):
@@ -417,34 +466,14 @@ class MinionCard(Card):
 		if self.health < 1:
 			self.health = 1
 
-	def __str__(self):
-		return "%s (%s), %s/%s %s %s: %s" % (
-			self.name,
-			self.cost,
-			self.attack,
-			self.health,
-			self.hero,
-			self.card_type,
-			' '.join([ability.text for ability in self.abilities])
-		)
-
-	def to_csv(self):
-		return "%s;%s;%s;%s;%s;%s;%s" % (
-			self.name,
-			self.cost,
-			self.attack,
-			self.health,
-			self.hero,
-			self.card_type,
-			' '.join([ability.text for ability in self.abilities])
-		)
-
 class SpellCard(Card):
 	def __init__(self):
-		self.card_type = 'spell'
-		self.hero = 'neutral'
+		super(SpellCard, self).__init__()
 
-		self.name = 'Unnamed spell'
+		self.card_type = 'spell'
+		self.hero = random.choice(['hunter', 'paladin', 'priest', 'warrior', 'warlock', 'shaman', 'mage', 'druid', 'rogue'])
+
+		self.name = self.random_name()
 		self.abilities = self.random_abilities()
 		self.cost = int(round(self.ability_value()))
 
@@ -468,12 +497,79 @@ class SpellCard(Card):
 		elif self.cost > 10:
 			self.cost = 10
 
-print('Name;Cost;Attack;Health;Class;Type;Effect')
+	def random_name(self):
+		return ' '.join([
+			random.choice(Card.name_prefaces),
+			random.choice(Card.actions)
+		])
+
+class WeaponCard(Card):
+	value_per_attack_point     = 0.77
+	value_per_durability_point = 1.10
+
+	def __init__(self):
+		super(WeaponCard, self).__init__()
+
+		self.card_type = 'weapon'
+		self.hero = random.choice(['neutral', 'hunter', 'paladin', 'priest', 'warrior', 'warlock', 'shaman', 'mage', 'druid', 'rogue'])
+
+		self.name = self.random_name()
+		self.abilities = self.random_abilities()
+		self.cost, self.attack, self.durability = self.generate_stats()
+
+		self.sanity_check_edges()
+
+	def random_abilities(self):
+		abilities = []
+
+		number_of_abilities = 1 #random.randint(1, 2)
+		for a in range(0, number_of_abilities):
+			abilities.append(WeaponAbility.random())
+
+		return abilities
+
+	def generate_stats(self):
+		ability_value = self.ability_value()
+
+		if ability_value > 10:
+			extra_value = random.uniform(0, 5)
+		elif ability_value < 0:
+			extra_value = random.uniform(-ability_value, 10)
+		else:
+			extra_value = random.uniform(0, 10 - ability_value)
+
+		attack_value_distribution = random.uniform(0.01, extra_value)
+		attack = int(attack_value_distribution / WeaponCard.value_per_attack_point)
+
+		durability_value_distribution = extra_value - attack_value_distribution
+		durability = int(durability_value_distribution / WeaponCard.value_per_durability_point)
+
+		cost = int(round(ability_value + extra_value))
+
+		return cost, attack, durability
+
+	def sanity_check_edges(self):
+		if self.cost < 0:
+			self.cost = 0
+		elif self.cost > 10:
+			self.cost = 10
+
+		if self.durability < 1:
+			self.durability = 1
+
+		if self.attack < 1:
+			self.attack = 1
+
+	def random_name(self):
+		return ' '.join([
+			random.choice(Card.names),
+			random.choice(Card.actions)
+		])
+
+print('Name;Cost;Attack;Health;Durability;Class;Type;Effect')
 for x in range(1, 100):
 
-	if random.randint(0, 1) == 0:
-		card = MinionCard()
-	else:
-		card = SpellCard()
+	card_type = [MinionCard, SpellCard, WeaponCard]
+	card = random.choice(card_type)()
 
 	print card.to_csv()
