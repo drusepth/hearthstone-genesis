@@ -3,6 +3,8 @@ import copy #copy.copy
 import re
 
 class Ability:
+	MAXIMUM_TEXT_LENGTH = 300
+
 	templates = [
 		{'value': -0.30, 'text': 'Choose One - <targetable_effect>; or <targetable_effect>.'},
 		{'value': -0.30, 'text': 'Choose One - <effect>; or <effect>.'},
@@ -121,11 +123,19 @@ class Ability:
 	]
 
 	minion_types = [
-		'Beast', 'Dragon', 'Murloc', 'Demon', 'Mech', 'Pirate', 'Totem'
+		{'value': 0.00, 'text': 'Beast'},
+		{'value': 0.00, 'text': 'Dragon'},
+		{'value': 0.00, 'text': 'Murloc'},
+		{'value': 0.00, 'text': 'Demon'},
+		{'value': 0.00, 'text': 'Mech'},
+		{'value': 0.00, 'text': 'Pirate'},
+		{'value': 0.00, 'text': 'Totem'},
 	]
 
 	card_types = [
-		'minion', 'spell', 'weapon'
+		{'value': 0.00, 'text': 'minion'},
+		{'value': 0.00, 'text': 'spell'},
+		{'value': 0.00, 'text': 'weapon'},
 	]
 
 	def __init__(self, text="", value=0):
@@ -134,58 +144,29 @@ class Ability:
 
 	@classmethod
 	def replace_tokens(ability_subclass, ability):
-		while '<effect>' in ability.get('text'):
-			random_effect    = random.choice(ability_subclass.effects)
-			ability['text']  = ability['text'].replace('<effect>', random_effect.get('text'), 1)
-			ability['value'] = ability['value'] + random_effect.get('value')
+		token_pools = {
+			'effect':            ability_subclass.effects,
+			'targetable_effect': ability_subclass.targetable_effects,
+			'stackable_effect':  ability_subclass.stackable_effects,
+			'condition':         ability_subclass.conditions,
+			'ability':           ability_subclass.abilities,
+			'ability_aura':      ability_subclass.ability_auras,
+			'minion_type':       ability_subclass.minion_types,
+			'triggers':          ability_subclass.triggers,
+			'card_type':         ability_subclass.card_types
+		}
 
-		while '<targetable_effect>' in ability.get('text'):
-			random_effect    = random.choice(ability_subclass.targetable_effects)
-			ability['text']  = ability['text'].replace('<targetable_effect>', random_effect.get('text'), 1)
-			ability['value'] = ability['value'] + random_effect.get('value')
+		while len(ability.get('text')) < Ability.MAXIMUM_TEXT_LENGTH:
+			made_replacement = False
+			for token, replacement_pool in token_pools.iteritems():
+				if token in ability.get('text'):
+					token_replacement = random.choice(replacement_pool)
+					ability['text']  = ability['text'].replace("<%s>" % token, token_replacement.get('text'), 1)
+					ability['value'] = ability['value'] + token_replacement.get('value')
+					made_replacement = True
 
-		while '<stackable_effect>' in ability.get('text'):
-			random_effect    = random.choice(ability_subclass.stackable_effects)
-			ability['text']  = ability['text'].replace('<stackable_effect>', random_effect.get('text'), 1)
-			ability['value'] = ability['value'] + random_effect.get('value')
-
-		while '<condition>' in ability.get('text'):
-			condition        = random.choice(ability_subclass.conditions)
-			ability['text']  = ability['text'].replace('<condition>', condition.get('text'), 1)
-			ability['value'] = ability['value'] + condition.get('value')
-
-		while '<ability>' in ability.get('text'):
-			random_ability   = random.choice(ability_subclass.abilities)
-			ability['text']  = ability['text'].replace('<ability>', random_ability.get('text'), 1)
-			ability['value'] = ability['value'] + random_ability.get('value')
-
-		while '<ability_aura>' in ability.get('text'):
-			random_ability   = random.choice(ability_subclass.ability_auras)
-			ability['text']  = ability['text'].replace('<ability_aura>', random_ability.get('text'), 1)
-			ability['value'] = ability['value'] + random_ability.get('value')
-
-		while '<minion_type>' in ability.get('text'):
-			random_type      = random.choice(ability_subclass.minion_types)
-			ability['text']  = ability['text'].replace('<minion_type>', random_type, 1)
-
-		while '<trigger>' in ability.get('text'):
-			random_trigger   = random.choice(ability_subclass.triggers)
-			ability['text']  = ability['text'].replace('<trigger>', random_trigger.get('text'), 1)
-
-		while '<card_type>' in ability.get('text'):
-			random_type      = random.choice(ability_subclass.card_types)
-			ability['text']  = ability['text'].replace('<card_type>', random_type, 1)
-
-		#TODO: clean all this up so ordering doesn't matter
-
-		while '<ability>' in ability.get('text'):
-			random_ability   = random.choice(ability_subclass.abilities)
-			ability['text']  = ability['text'].replace('<ability>', random_ability.get('text'), 1)
-			ability['value'] = ability['value'] + random_ability.get('value')
-
-		while '<minion_type>' in ability.get('text'):
-			random_type      = random.choice(ability_subclass.minion_types)
-			ability['text']  = ability['text'].replace('<minion_type>', random_type, 1)
+			if not made_replacement:
+				break
 
 		return ability
 
